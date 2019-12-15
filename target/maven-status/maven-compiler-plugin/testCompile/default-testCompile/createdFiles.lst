@@ -1,0 +1,15 @@
+essilor\integrator\adapter\service\eet\EetSignServiceTest.class
+essilor\integrator\adapter\test\BkpTest.class
+essilor\integrator\adapter\service\B2BOpticBuilderTest.class
+essilor\integrator\adapter\service\UploadOrderActionReplyBuilderTest.class
+essilor\integrator\adapter\service\client\WSClientTest.class
+essilor\integrator\adapter\datasource\TestRoutingDataSource.class
+essilor\integrator\adapter\service\OrderBuilderTest.class
+essilor\integrator\adapter\tools\EncryptorTest.class
+essilor\integrator\adapter\service\eet\EetServiceTest.class
+essilor\integrator\adapter\test\PkpTest.class
+essilor\integrator\adapter\test\TestClient.class
+essilor\integrator\adapter\EetDataBuilderTest.class
+essilor\integrator\adapter\service\eet\EetTrzbaBuilderTest.class
+essilor\integrator\adapter\service\AdapterServiceTest.class
+essilor\integrator\adapter\dao\ConfDaoTest.class

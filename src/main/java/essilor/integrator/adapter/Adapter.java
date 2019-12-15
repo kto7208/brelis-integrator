@@ -1,0 +1,221 @@
+package essilor.integrator.adapter;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import essilor.integrator.adapter.service.AdapterService;
+import essilor.integrator.adapter.service.PingService;
+import essilor.integrator.adapter.service.eet.EetService;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.context.support.FileSystemXmlApplicationContext;
+
+import essilor.integrator.adapter.service.AdapterReplyBuilder;
+import essilor.integrator.adapter.service.ServiceCallTimestampHolder;
+import org.springframework.stereotype.Component;
+
+@Component
+public class Adapter implements ApplicationContextAware {
+
+	private static final Logger logger = Logger.getLogger(Adapter.class);
+
+	private final ExecutorService exec = Executors.newFixedThreadPool(10);
+
+	private AtomicBoolean shallStop = new AtomicBoolean(false);
+	private ApplicationContext ctx;
+
+	@Autowired
+	private AdapterService adapterService;
+
+	@Autowired
+	private EetService eetService;
+
+	@Autowired
+	private PingService pingService;
+
+	@Value("${adapter.port}")
+	private String port;
+
+
+
+	public void start() throws IOException {
+		logger.info("adapter started");
+		ServerSocket socket = new ServerSocket(Integer.parseInt(port));
+		while (!exec.isShutdown()) {
+			try {
+				System.out.print("halo 1.");
+				final Socket conn = socket.accept();
+				System.out.print("halo 2.");
+				exec.execute(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							handleRequest(conn);
+						} catch (IOException e) {
+							logger.error(e);
+						}
+					}
+				} );
+				System.out.print("halo 3.");
+				if (shallStop.get() == true) {
+				    break;
+                }
+			} catch (RejectedExecutionException e) {
+				if (!exec.isShutdown()) {
+					logger.error(e);
+				}
+			}
+		}
+		logger.info("Adapter finished");
+	}
+
+    void shutdownAndAwaitTermination() {
+        exec.shutdown(); // Disable new tasks from being submitted
+        try {
+            // Wait a while for existing tasks to terminate
+            if (!exec.awaitTermination(60, TimeUnit.SECONDS)) {
+                exec.shutdownNow(); // Cancel currently executing tasks
+                // Wait a while for tasks to respond to being cancelled
+                if (!exec.awaitTermination(60, TimeUnit.SECONDS))
+                    System.err.println("Pool did not terminate");
+            }
+        } catch (InterruptedException ie) {
+            // (Re-)Cancel if current thread also interrupted
+            exec.shutdownNow();
+            // Preserve interrupt status
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    public void stop() {
+//	    shutdownAndAwaitTermination();
+        shallStop.set(true);
+	}
+
+	void handleRequest(Socket conn) throws IOException {
+		int bufFrame = 167;
+		DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(
+				conn.getOutputStream(), bufFrame));
+		DataInputStream dis = new DataInputStream(new BufferedInputStream(
+				conn.getInputStream(), bufFrame));
+		String reply = null;
+		try {
+			byte[] buf = new byte[bufFrame];
+			dis.readFully(buf, 0, bufFrame);
+			String s = new String(buf);
+			String opCode = s.substring(0, 3);
+			int operationCode = Integer.parseInt(opCode);
+			if (operationCode == 999) {
+				stop();
+				return;
+			}
+			AdapterRequest request = AdapterRequest.getRequest(ctx, s);
+			logger.info("Adapter request: " + request.toString());
+			Result result = null;
+			switch (request.getMethodName()) {
+			case UploadCustomFile:
+				result = adapterService.uploadCustomFile(request);
+				break;
+			case UploadOrderByAction:
+				result = adapterService.uploadOrderByAction(request);
+				break;
+			case GetOrderByPoNum:
+				result = adapterService.getOrderByPoNum(request);
+				break;
+			case GetOrderByPoNum_2:
+				result = adapterService.getOrderByPoNum_2(request);
+				break;
+			case GetOrderAsPDFByPoNum:
+				result = adapterService.getOrderAsPDFByPoNum(request);
+				break;
+			case ValidateOrderFromPMS:
+				result = adapterService.validateOrderFromPMS(request);
+				break;
+			case GetSuppliers:
+				result = adapterService.getSuppliers(request);
+				break;
+			case OdeslaniTrzby:
+				result = eetService.processRequest(request);
+				break;
+				case Ping:
+				result = pingService.processRequest(request);
+				break;
+			} // switch
+
+			logger.debug("Result: " + result.toString());
+			reply = buildReply(request, result);
+			dos.write(reply.getBytes());
+
+		} catch (Exception e) {
+			ServiceCallTimestampHolder.setTimestamp(System.currentTimeMillis());
+			StringBuilder sb = new StringBuilder();
+			sb.append("ER").append(ServiceCallTimestampHolder.getAsDateTime())
+					.append(e.getMessage());
+			try {
+				dos.write(sb.toString().getBytes());
+			} catch (Exception e1) {
+			}
+			logger.error(e);
+		} finally {
+			try {
+				dos.flush();
+				dos.close();
+				logger.info("Reply sent: " + reply);
+			} catch (IOException e) {
+				logger.error(e);
+			}
+		}
+	}
+
+	private String buildReply(AdapterRequest request, Result result)
+			throws IOException {
+		return AdapterReplyBuilder.getBuilder(request, result).build();
+	}
+
+	public static void main(String[] args) {
+
+		String log4jConfig = System.getProperty("log4j.configuration");
+		if (log4jConfig == null) {
+			BasicConfigurator.configure();
+		} else {
+			PropertyConfigurator.configure(log4jConfig);
+		}
+
+		ApplicationContext ctx;
+		String resProp = System.getProperty("ext.res.dir");
+		if (resProp != null) {
+			ctx = new FileSystemXmlApplicationContext(resProp
+					+ "/run-config.xml");
+		} else {
+			ctx = new ClassPathXmlApplicationContext("/run-config.xml");
+		}
+
+		Adapter adapter = ctx.getBean("adapter", Adapter.class);
+		adapter.setApplicationContext(ctx);
+		try {
+			adapter.start();
+		} catch (IOException e) {
+			logger.error(e);
+		}
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext ctx)
+			throws BeansException {
+		this.ctx = ctx;
+	}
+}
