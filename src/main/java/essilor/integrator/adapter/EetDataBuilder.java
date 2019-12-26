@@ -38,19 +38,27 @@ public class EetDataBuilder {
         }
 
         eetData.setCelkTrzba(new BigDecimal(request.substring(5,17).trim()));
-        eetData.setZaklDan1(new BigDecimal(request.substring(17,29).trim()));
-        eetData.setDan1(new BigDecimal(request.substring(29,41).trim()));
-        eetData.setZaklDan2(new BigDecimal(request.substring(41,53).trim()));
-        eetData.setDan2(new BigDecimal(request.substring(53,65).trim()));
+        eetData.setZaklDan1(setNullIfZero(new BigDecimal(request.substring(17,29).trim())));
+        eetData.setDan1(setNullIfZero(new BigDecimal(request.substring(29,41).trim())));
+        eetData.setZaklDan2(setNullIfZero(new BigDecimal(request.substring(41,53).trim())));
+        eetData.setDan2(setNullIfZero(new BigDecimal(request.substring(53,65).trim())));
         eetData.setDatTrzby(new SimpleDateFormat(DATE_TIME_MASK).parse(request.substring(65,84).trim()));
         eetData.setPoradoveCisloDokladu(request.substring(84,94).trim());
         eetData.setSkupinaDokladu(request.substring(94,97).trim());
         eetData.setSkupinaZakazok(request.substring(97,99).trim());
         eetData.setDataSourceName(request.substring(99,129).trim());
         eetData.setKod(request.substring(129,131).trim());
-        eetData.setZaklDan3(new BigDecimal(request.substring(131,143).trim()));
-        eetData.setDan3(new BigDecimal(request.substring(143,155).trim()));
-        eetData.setZaklNepodlhDph(new BigDecimal(request.substring(155,167).trim()));
+        eetData.setZaklDan3(setNullIfZero(new BigDecimal(request.substring(131,143).trim())));
+        eetData.setDan3(setNullIfZero(new BigDecimal(request.substring(143,155).trim())));
+        eetData.setZaklNepodlhDph(setNullIfZero(new BigDecimal(request.substring(155,167).trim())));
         return eetData;
+    }
+
+    private BigDecimal setNullIfZero(BigDecimal val) {
+        if (val != null && BigDecimal.ZERO.compareTo(val) == 0) {
+            return null;
+        } else {
+            return val;
+        }
     }
 }

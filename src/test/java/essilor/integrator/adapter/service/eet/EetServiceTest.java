@@ -24,14 +24,15 @@ public class EetServiceTest {
                 .append("000000001.00")
                 .append("000000000.83")
                 .append("000000000.17")
-                .append("000000000.00")
-                .append("000000000.00")
+                .append("000000001.11")
+                .append("000000002.22")
                 .append("2017-02-17 22:31:00")
                 .append("0209300007")
                 .append("002")
                 .append("01")
                 .append("012345678901234567890123456789")
-                .append("ZL")
+//                .append("ZL")
+                .append("A1")
                 .append("000006666.66")
                 .append("000007777.77")
                 .append("000008888.88");
@@ -139,4 +140,37 @@ public class EetServiceTest {
 
         service.processRequest(req);
     }
+
+    @Test
+    public void testEetNull() throws Exception {
+        StringBuilder sb = new StringBuilder()
+                .append("110")
+                .append("N") // overeni
+                .append("A") // prvni zaslani
+                .append("000000001.11")
+                .append("000000000.00")
+                .append("000000000.00")
+                .append("000000000.00")
+                .append("000000000.00")
+                .append("2017-02-17 22:31:00")
+                .append("0209300007")
+                .append("002")
+                .append("01")
+                .append("012345678901234567890123456789")
+//                .append("ZL")
+                .append("A1")
+                .append("000000000.00")
+                .append("000000000.00")
+                .append("000000000.00");
+
+        AdapterRequest req = AdapterRequest.getEmptyRequest();
+        req.setEetData(EetDataBuilder.newInstance().withRequest(sb.toString()).build());
+        req.setMethodName(AdapterRequest.MethodName.OdeslaniTrzby);
+
+        EetService service = context.getBean("eetService",
+                EetService.class);
+
+        service.processRequest(req);
+    }
+
 }
