@@ -10,7 +10,7 @@
 
     <properties>
         <spring.version>3.2.18.RELEASE</spring.version>
-        <spring.ws.version>2.2.4.RELEASE</spring.ws.version>
+        <spring.ws.version>3.0.8.RELEASE</spring.ws.version>
         <http.client.version>3.1</http.client.version>
         <apache.httpclient.version>4.3.6</apache.httpclient.version>
         <log4j.version>1.2.16</log4j.version>
