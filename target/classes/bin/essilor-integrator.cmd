@@ -1,1 +1,0 @@
-java -Dext.prop.dir=./resource/properties -Dext.res.dir=./resource -Dlog4j.configuration=./resource/properties/log4j.properties -jar essilor-integrator.jar
