@@ -242,7 +242,6 @@ public class B2BOpticBuilder {
                 rxData.setAddition(null);
             }
 
-
             // prism
             if (BigDecimal.ZERO.compareTo(item.getPrisma1()) != 0
                     || item.getBaza1() != 0) {
@@ -280,6 +279,7 @@ public class B2BOpticBuilder {
                         buildCoating(item.getUprava4_typ(), item.getUprava4_kod(),
                                 item.getUprava4_perc()));
             }
+            lens.setCentration(buildCentration(item));
             lens.setGeometry(buildGeometry(item));
             lens.setBranding(false);
 
@@ -291,6 +291,20 @@ public class B2BOpticBuilder {
                 lens.setSide(Sides.LEFT);
             }
             return lens;
+        }
+
+        private Centration buildCentration(OrderItem orderItem) {
+            Centration centration = new Centration();
+            Centration.MonocularCentrationDistance mcd = new Centration.MonocularCentrationDistance();
+            centration.setMonocularCentrationDistance(mcd);
+            mcd.setReference(OCReferences.FAR);
+            mcd.setValue(orderItem.getPd().floatValue());
+            Centration.Height h = new Centration.Height();
+            centration.setHeight(h);
+            h.setReference(OCReferences.FAR);
+            h.setReferenceHeight(HeightReferences.OVERBOX);
+            h.setValue(orderItem.getVyska().floatValue());
+            return centration;
         }
 
         private GeometryType buildGeometry(OrderItem orderItem) {
@@ -310,7 +324,7 @@ public class B2BOpticBuilder {
         }
 
         private Coating buildCoating(String uprava_typ, String uprava_kod,
-                                     String uprava_perc) {
+                                      String uprava_perc) {
             Coating coating = new Coating();
             if (CoatingTypes.ANTIREFLEX.name().equals(uprava_typ)) {
                 coating.setCoatingType(CoatingTypes.ANTIREFLEX);

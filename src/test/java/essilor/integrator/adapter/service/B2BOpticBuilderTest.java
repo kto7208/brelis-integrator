@@ -23,11 +23,11 @@ public class B2BOpticBuilderTest {
 
 	@Test
 	public void testBuilder() throws Exception {
-		B2BOpticBuilder b2bBuilder = context.getBean("b2bOpticBuilder",
+		B2BOpticBuilder b2bBuilder = context.getBean("b2BOpticBuilder",
 				B2BOpticBuilder.class);
 
 		B2BOptic b2bOptic = b2bBuilder.new Builder()
-				.withZakazka("12501861")
+				.withZakazka("15505168")
 				.withSkupina("1")
 				.withObjednavka("3247")
 				.withBranchCode("ZL")
