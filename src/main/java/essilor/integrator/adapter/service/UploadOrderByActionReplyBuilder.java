@@ -1,10 +1,11 @@
 package essilor.integrator.adapter.service;
 
 import java.io.StringReader;
-import java.util.List;
+import java.util.*;
 
 import org.apache.log4j.Logger;
 import org.jdom2.Element;
+import org.jdom2.Namespace;
 import org.jdom2.filter.Filters;
 import org.jdom2.input.SAXBuilder;
 
@@ -30,7 +31,6 @@ public class UploadOrderByActionReplyBuilder extends AdapterReplyBuilder {
 				builder.append(result.getUrl());
 				if ("KO".equals(result.getReturnCode())
 						&& result.getErrorText() != null) {
-					builder.append("\r\n");
 					builder.append(buildErrorMessages());
 				}
 			} else {
@@ -48,9 +48,8 @@ public class UploadOrderByActionReplyBuilder extends AdapterReplyBuilder {
 	
 	private String buildErrorMessages() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("ERROR MESSAGE").append("\r\n");
 		try {
-			XPathExpression<Element> expr = XPathFactory.instance().compile("//ERROR", Filters.element());
+			XPathExpression<Element> expr = XPathFactory.instance().compile("//*[local-name()='ERROR']", Filters.element());
 			List<Element> errors = expr.evaluate(new SAXBuilder().build(new StringReader(result.getErrorText())));
 			for (Element error : errors) {
 				if (!error.getTextTrim().isEmpty()) {

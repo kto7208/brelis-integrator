@@ -5,8 +5,18 @@ import essilor.integrator.adapter.Result;
 import essilor.integrator.adapter.domain.uploadfile.UploadOrderByAction;
 import essilor.integrator.adapter.domain.uploadfile.UploadOrderByActionResponse;
 import org.apache.log4j.Logger;
+import org.jdom2.Element;
+import org.jdom2.filter.Filters;
+import org.jdom2.input.SAXBuilder;
+import org.jdom2.xpath.XPathExpression;
+import org.jdom2.xpath.XPathFactory;
+
+import java.io.StringReader;
+import java.util.List;
 
 public class UploadOrderByActionResultBuilder extends ResultBuilder {
+	private static final Logger logger = Logger.getLogger(UploadOrderByActionResultBuilder.class);
+
 	private UploadOrderByAction wsRequest;
 	private UploadOrderByActionResponse wsResponse;
 
@@ -40,7 +50,26 @@ public class UploadOrderByActionResultBuilder extends ResultBuilder {
 		}
 		if (wsResponse.getUploadOrderByActionResult().getErrorMessages() != null) {
 			result.setErrorText(wsResponse.getUploadOrderByActionResult().getErrorMessages());
-		} 
+		}
+		if ("KO".equals(wsResponse.getUploadOrderByActionResult().getStatus()) &&
+				wsResponse.getUploadOrderByActionResult().getErrorMessages() != null) {
+			result.setErrorCode(extractErrorCode(wsResponse.getUploadOrderByActionResult().getErrorMessages()));
+		}
+	}
+
+	String extractErrorCode(String errorMessages) {
+		try {
+			XPathExpression<Element> expr = XPathFactory.instance().compile("//*[local-name()='ERROR']", Filters.element());
+			List<Element> errors = expr.evaluate(new SAXBuilder().build(new StringReader(errorMessages)));
+			for (Element error : errors) {
+				if (error.getAttribute("CODE") != null) {
+					return error.getAttribute("CODE").getValue();
+				}
+			}
+		} catch (Exception e) {
+			logger.warn("failed to parse error code", e);
+		}
+		return null;
 	}
 
 }

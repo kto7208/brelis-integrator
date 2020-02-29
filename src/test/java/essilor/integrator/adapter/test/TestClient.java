@@ -116,8 +116,8 @@ public class TestClient {
 	@Test
 	public void testUploadOrderByAction() throws Exception {
 		Socket s = new Socket("localhost", 6900);
-		InputStream is = new BufferedInputStream(s.getInputStream(), 131);
-		OutputStream os = new BufferedOutputStream(s.getOutputStream(), 131);
+		InputStream is = new BufferedInputStream(s.getInputStream(), 167);
+		OutputStream os = new BufferedOutputStream(s.getOutputStream(), 167);
 		StringBuilder sb = new StringBuilder();
 		sb.append("011")
 		.append("000000015505168")
@@ -127,9 +127,10 @@ public class TestClient {
 		.append("ZL                            ")
 		.append("0000008317")
 		.append("           Send")
-        .append("ZL")
-        .append("000000000000000000000000000000000000");
-		os.write(sb.toString().getBytes("UTF-8"), 0, 131);
+        .append("BJ")
+        .append("000000000000000000000000000000000000")
+		.append("000000000000000000000000000000000000");
+		os.write(sb.toString().getBytes("UTF-8"), 0, 167);
 		
 		os.flush();
 		byte[] frame = new byte[1024];

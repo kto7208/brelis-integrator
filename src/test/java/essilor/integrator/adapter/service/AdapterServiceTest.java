@@ -144,15 +144,17 @@ public class AdapterServiceTest {
 		
 		AdapterRequest req = AdapterRequest.getEmptyRequest();
 		req.setOrderNumber("15505168");
+		//req.setOrderNumber("15505167");
 		req.setOrderGroup("1");
 		req.setPurchaseOrderNumber("12250");
+		//req.setPurchaseOrderNumber("999999999");
 		req.setMethodName(MethodName.UploadOrderByAction);
 		req.setManufacturer(Manufacturer.Essilor);
 		req.setSloId("8317");
 		req.setActionType(ActionType.Send);
 		req.setDirection(Direction.SEND);
-		req.setDataSourceName("kto_1");
-		req.setBranchCode("SV");
+		req.setDataSourceName("ZL");
+		req.setBranchCode("BJ");
 
 		Result result = service.uploadOrderByAction(req);
 		
@@ -173,7 +175,7 @@ public class AdapterServiceTest {
 		req.setActionType(ActionType.Send);
 		req.setDirection(Direction.SEND);
 		req.setDataSourceName("kto_1");
-		req.setBranchCode("ZL");
+		req.setBranchCode("BJ");
 
 		Result result = service.validateOrderFromPMS(req);
 
